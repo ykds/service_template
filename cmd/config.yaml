@@ -1,0 +1,22 @@
+http_server:
+  host: localhost
+  port: 8000
+
+database:
+  driver: postgres
+  host: 192.168.92.142
+  port: 5432
+  user: postgres
+  password: 123456
+  db_name: postgres
+
+cache:
+  host: localhost
+  port: 6379
+
+log:
+  filename: ""
+  max_size: 0
+  max_age: 0
+  compress: false
+  max_backups: 0

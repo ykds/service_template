@@ -1,0 +1,70 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/example": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ex"
+                ],
+                "summary": "Example",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "comment",
+                        "name": "field1",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "comment",
+                        "name": "field2",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/api.ExampleReq"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "comment",
+                        "name": "field3",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "comment",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.ExampleReq": {
+            "type": "object"
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "info": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

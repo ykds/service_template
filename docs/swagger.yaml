@@ -1,0 +1,44 @@
+definitions:
+  api.ExampleReq:
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      info:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /example:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: comment
+        in: query
+        name: field1
+        required: true
+        type: integer
+      - description: comment
+        in: body
+        name: field2
+        schema:
+          $ref: '#/definitions/api.ExampleReq'
+      - description: comment
+        in: header
+        name: field3
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: comment
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Example
+      tags:
+      - ex
+swagger: "2.0"
