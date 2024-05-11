@@ -74,7 +74,7 @@ func main() {
 	// 初始化 Redis
 	rdb, err := cache.NewRedis(cfg.Cache)
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer rdb.Close()
 	// 初始化服务层
@@ -89,10 +89,12 @@ func main() {
 	// 启动服务
 	engine := gin.New()
 	engine.Use(gin.RecoveryWithWriter(log.GetOutput()))
-	pprof.Register(engine, "/inner/"+pprof.DefaultPrefix)
+	pprof.Register(engine, pprof.DefaultPrefix)
 	s := server.NewServer(engine, cfg.HttpServer)
 	api.InitRouter(engine, httpApi, srv)
-	api.RegisterSwagger(engine, s.Addr())
+	if *debugMode {
+		api.RegisterSwagger(engine, s.Addr())
+	}
 	done := make(chan struct{})
 	go func() {
 		err := s.Start()
@@ -102,7 +104,7 @@ func main() {
 		done <- struct{}{}
 	}()
 
-	signals := make(chan os.Signal)
+	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-signals:

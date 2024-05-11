@@ -6,7 +6,7 @@ definitions:
       code:
         type: integer
       data: {}
-      info:
+      message:
         type: string
     type: object
 info:
@@ -38,6 +38,12 @@ paths:
           description: comment
           schema:
             $ref: '#/definitions/response.Response'
+        "400":
+          description: comment
+        "500":
+          description: comment
+          schema:
+            type: string
       summary: Example
       tags:
       - ex

@@ -56,6 +56,15 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
+                    },
+                    "400": {
+                        "description": "comment"
+                    },
+                    "500": {
+                        "description": "comment",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -72,7 +81,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "data": {},
-                "info": {
+                "message": {
                     "type": "string"
                 }
             }

@@ -15,6 +15,7 @@ func IsNotFound(err error) bool {
 type Option struct {
 	Host     string `json:"host" yaml:"host"`
 	Port     int    `json:"port" yaml:"port"`
+	Username string `json:"username" gorm:"username"`
 	Password string `json:"password" yaml:"password"`
 	DB       int    `json:"db" yaml:"db"`
 }
@@ -22,6 +23,7 @@ type Option struct {
 func NewRedis(opt Option) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", opt.Host, opt.Port),
+		Username: opt.Username,
 		Password: opt.Password,
 		DB:       opt.DB,
 	})

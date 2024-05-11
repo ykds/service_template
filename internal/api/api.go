@@ -37,6 +37,8 @@ type ExampleReq struct{}
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response "comment"
+// @Failure 500 {string} string "comment"
+// @Failure 400 "comment"
 // @Router /example [get]
 func (s *ExampleApi) Example(c *gin.Context) {
 	c.JSON(200, "ok")
