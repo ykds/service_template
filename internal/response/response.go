@@ -10,7 +10,7 @@ import (
 type Response struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Data    interface{} `json:"data,omitempty" swaggertype:"object"`
 }
 
 func HandleResponse(ctx *gin.Context, err error, req interface{}, data interface{}) {

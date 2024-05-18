@@ -104,6 +104,8 @@ func main() {
 		done <- struct{}{}
 	}()
 
+	log.Info("api server started")
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	select {

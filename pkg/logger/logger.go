@@ -62,11 +62,11 @@ type Option struct {
 }
 
 type LumberjackOption struct {
-	Filename   string `json:"filename"`
-	MaxSize    int    `json:"max_size"`
-	MaxAge     int    `json:"max_age"`
-	Compress   bool   `json:"compress"`
-	MaxBackups int    `json:"max_backups"`
+	Filename   string `json:"filename" yaml:"filename"`
+	MaxSize    int    `json:"max_size" yaml:"max_max"`
+	MaxAge     int    `json:"max_age" yaml:"max_age"`
+	Compress   bool   `json:"compress" yaml:"compress"`
+	MaxBackups int    `json:"max_backups" yaml:"max_backups"`
 }
 
 type Logger struct {

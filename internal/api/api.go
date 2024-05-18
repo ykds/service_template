@@ -27,7 +27,10 @@ type ExampleApi struct {
 
 type ExampleReq struct{}
 
+type ExampleResp struct{}
+
 // Example
+// @ID Example
 // @Summary Example
 // @Description
 // @Tags ex
@@ -36,7 +39,7 @@ type ExampleReq struct{}
 // @Param field3 header string false "comment"
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response "comment"
+// @Success 200 {object} response.Response{data=ExampleResp} "comment"
 // @Failure 500 {string} string "comment"
 // @Failure 400 "comment"
 // @Router /example [get]

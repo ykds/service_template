@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
@@ -13,6 +14,7 @@ type DriverType string
 
 const (
 	Postgres DriverType = "postgres"
+	MySQL    DriverType = "mysql"
 )
 
 type Option struct {
@@ -43,6 +45,10 @@ func NewDB(opt Option) (*DB, error) {
 		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
 			opt.Host, opt.User, opt.Password, opt.DbName, opt.Port)
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	case MySQL:
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			opt.User, opt.Password, opt.Host, opt.Port, opt.DbName)
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	default:
 		return nil, errors.New("unsupported driver")
 	}
