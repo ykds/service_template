@@ -1,9 +1,9 @@
 package lock
 
 import (
+	"accelerator_api/pkg/cache"
 	"fmt"
 	"math/rand"
-	"service_template/pkg/cache"
 	"sync"
 	"testing"
 	"time"
@@ -11,7 +11,7 @@ import (
 
 func BenchmarkRedisLock(b *testing.B) {
 	rdb, err := cache.NewRedis(cache.Option{
-		Host: "localhost",
+		Host: "192.168.92.142",
 		Port: 6379,
 	})
 	if err != nil {
@@ -23,7 +23,7 @@ func BenchmarkRedisLock(b *testing.B) {
 	rl := NewRedisLock(rdb, 60)
 	for i := 0; i < b.N; i++ {
 		key := fmt.Sprintf("%d", rand.Intn(50))
-		ok, err := rl.TryLock(key)
+		ok, entry, err := rl.TryLock(key)
 		if err != nil {
 			panic(err)
 		}
@@ -31,7 +31,7 @@ func BenchmarkRedisLock(b *testing.B) {
 			wg.Add(1)
 			time.AfterFunc(time.Millisecond*time.Duration(rand.Intn(100)+1), func() {
 				defer wg.Done()
-				_ = rl.UnLock(key)
+				_ = rl.UnLock(entry)
 
 			})
 		}
@@ -44,13 +44,13 @@ func BenchmarkLocalLock(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			key := fmt.Sprintf("%d", rand.Intn(20))
-			ok, err := lock.TryLock(key)
+			ok, entry, err := lock.TryLock(key)
 			if err != nil {
 				panic(err)
 			}
 			if ok {
 				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)+1))
-				err := lock.UnLock(key)
+				err := lock.UnLock(entry)
 				if err != nil {
 					panic(err)
 				}
@@ -61,21 +61,21 @@ func BenchmarkLocalLock(b *testing.B) {
 
 func TestLocalLock(t *testing.T) {
 	lock := NewLocalLock()
-	ok, _ := lock.TryLock("test")
+	ok, _, _ := lock.TryLock("test")
 	if ok {
-		okk, _ := lock.TryLock("test1")
+		okk, entry, _ := lock.TryLock("test1")
 		if !okk {
 			t.Fatal("can't lock with two diff key")
 		}
-		_ = lock.UnLock("test1")
+		_ = lock.UnLock(entry)
 
-		ok2, _ := lock.TryLock("test")
+		ok2, entry, _ := lock.TryLock("test")
 		if ok2 {
 			t.Fatal("get the same lock")
 		}
-		_ = lock.UnLock("test")
+		_ = lock.UnLock(entry)
 
-		ok3, _ := lock.TryLock("test")
+		ok3, _, _ := lock.TryLock("test")
 		if !ok3 {
 			t.Fatal("can't lock after unlock")
 		}
@@ -86,7 +86,7 @@ func TestLocalLock(t *testing.T) {
 
 func TestRedisLock(t *testing.T) {
 	rdb, err := cache.NewRedis(cache.Option{
-		Host: "localhost",
+		Host: "192.168.92.142",
 		Port: 6379,
 	})
 	if err != nil {
@@ -94,34 +94,34 @@ func TestRedisLock(t *testing.T) {
 	}
 	defer rdb.Close()
 	lock := NewRedisLock(rdb, 10)
-	ok, _ := lock.TryLock("test")
+	ok, entry, err := lock.TryLock("test")
 	if !ok {
-		t.Fatal("申请锁失败")
+		t.Fatalf("申请锁失败, error: %v", err)
 	}
 
-	okk, _ := lock.TryLock("test1")
+	okk, entry1, err := lock.TryLock("test1")
 	if !okk {
-		t.Fatal("不同的key获取锁失败")
+		t.Fatalf("不同的key获取锁失败, error: %v", err)
 	}
-	_ = lock.UnLock("test1")
+	_ = lock.UnLock(entry1)
 
-	ok2, _ := lock.TryLock("test")
+	ok2, _, err := lock.TryLock("test")
 	if ok2 {
-		t.Fatal("同key申请锁成功")
+		t.Fatalf("同key申请锁成功, err: %v", err)
 	}
-	_ = lock.UnLock("test")
+	_ = lock.UnLock(entry)
 
-	ok3, _ := lock.TryLock("test")
+	ok3, entry2, _ := lock.TryLock("test")
 	if !ok3 {
 		t.Fatal("解锁后无法申请锁")
 	}
 	time.Sleep(time.Second * 15)
-	ok4, _ := lock.TryLock("test")
+	ok4, _, _ := lock.TryLock("test")
 	if ok4 {
 		t.Fatal("锁没有成功续约")
 	}
-	_ = lock.UnLock("test")
-	ok5, _ := lock.TryLock("test")
+	_ = lock.UnLock(entry2)
+	ok5, _, _ := lock.TryLock("test")
 	if !ok5 {
 		t.Fatal("解锁失败")
 	}
