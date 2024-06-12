@@ -1,8 +1,8 @@
 package ratelimiter
 
 import (
+	"accelerator_api/pkg/cache"
 	"context"
-	"github.com/redis/go-redis/v9"
 	"sync"
 	"time"
 )
@@ -11,17 +11,20 @@ type RateLimiter interface {
 	CanPass(key string) (bool, error)
 }
 
-func NewRedisRateLimiter(rdb *redis.Client, max int64, interval int) RateLimiter {
+func NewRedisRateLimiter(rdb *cache.Redis, max int64, interval int) RateLimiter {
 	return &redisRateLimiter{rdb, max, interval}
 }
 
 type redisRateLimiter struct {
-	rdb      *redis.Client
+	rdb      *cache.Redis
 	max      int64
 	interval int
 }
 
 func (r *redisRateLimiter) CanPass(key string) (bool, error) {
+	if !r.rdb.IsOk() {
+		return false, r.rdb.Error()
+	}
 	script := `
 local res = redis.call('INCR', KEYS[1])
 if res == 1
@@ -30,8 +33,11 @@ then
 end 
 return res
 `
-	count, err := r.rdb.Eval(context.Background(), script, []string{key}, r.interval).Int64()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	count, err := r.rdb.Eval(ctx, script, []string{key}, r.interval).Int64()
 	if err != nil {
+		r.rdb.OccurErr(err)
 		return false, err
 	}
 	return count < r.max, nil
@@ -61,7 +67,7 @@ type localRateLimiter struct {
 func (l *localRateLimiter) CanPass(key string) (bool, error) {
 	l.m.Lock()
 	if e, ok := l.entries[key]; ok {
-		if e.ExpiredAt.After(time.Now()) {
+		if e.ExpiredAt.Before(time.Now()) {
 			e.count = 0
 			e.ExpiredAt = time.Now().Add(time.Second * time.Duration(l.interval))
 		}
