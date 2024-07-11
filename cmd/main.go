@@ -3,16 +3,12 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
-	"github.com/gin-contrib/pprof"
-	"github.com/gin-gonic/gin"
 	"io"
 	"os"
 	"os/signal"
 	"service_template/internal/api"
 	"service_template/internal/config"
 	"service_template/internal/repository"
-	"service_template/internal/repository/model"
 	"service_template/internal/server"
 	"service_template/internal/service"
 	"service_template/pkg/cache"
@@ -20,13 +16,14 @@ import (
 	"service_template/pkg/logger"
 	"syscall"
 	"time"
+
+	"github.com/gin-contrib/pprof"
+	"github.com/gin-gonic/gin"
 )
 
 var (
 	configFile = flag.String("config", "./config.yaml", "config file path")
 	debugMode  = flag.Bool("debug", false, "open debug mode")
-	migrate    = flag.Bool("migrate", false, "migrate tables")
-	testData   = flag.Bool("test-data", false, "create test data to database")
 )
 
 func main() {
@@ -53,22 +50,6 @@ func main() {
 		panic(err)
 	}
 	defer database.Close()
-	if *migrate {
-		err := database.AutoMigrate(model.Tables...)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Migrate tables finished.")
-		return
-	}
-	if *testData {
-		err := genTestData(database)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Generating test data finished.")
-		return
-	}
 	// 初始化存储层
 	repo := repository.NewRepository(database)
 	// 初始化 Redis

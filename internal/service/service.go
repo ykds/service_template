@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/redis/go-redis/v9"
 	"service_template/internal/repository"
+	"service_template/pkg/cache"
 )
 
-func NewService(repo *repository.Repository, cache *redis.Client) *Service {
+func NewService(repo *repository.Repository, cache cache.Cache) *Service {
 	return &Service{
 		ExampleService: NewExampleService(repo),
 	}

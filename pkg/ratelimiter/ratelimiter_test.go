@@ -15,7 +15,7 @@ func BenchmarkNewRedisRateLimiter(b *testing.B) {
 	if err != nil {
 		panic(err)
 	}
-	limiter := NewRedisRateLimiter(rdb, 10, 60)
+	limiter := NewRedisRateLimiter(rdb.(*cache.Redis), 10, 60)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			int63 := rand.Int63()

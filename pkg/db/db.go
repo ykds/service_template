@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"time"
 )
 
 type DriverType string
@@ -15,6 +17,7 @@ type DriverType string
 const (
 	Postgres DriverType = "postgres"
 	MySQL    DriverType = "mysql"
+	Sqlite   DriverType = "sqlite"
 )
 
 type Option struct {
@@ -49,6 +52,8 @@ func NewDB(opt Option) (*DB, error) {
 		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 			opt.User, opt.Password, opt.Host, opt.Port, opt.DbName)
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	case Sqlite:
+		db, err = gorm.Open(sqlite.Open(opt.DbName), &gorm.Config{})
 	default:
 		return nil, errors.New("unsupported driver")
 	}

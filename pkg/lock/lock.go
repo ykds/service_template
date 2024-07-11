@@ -1,8 +1,8 @@
 package lock
 
 import (
-	"accelerator_api/pkg/cache"
 	"context"
+	"service_template/pkg/cache"
 	"sync"
 	"time"
 )
@@ -130,7 +130,7 @@ func (r *redisLock) renewLock() {
 					continue
 				}
 				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-				ok, err := r.Expire(ctx, e.key, time.Duration(r.ttl)*time.Second).Result()
+				ok, err := r.Expire(ctx, e.key, time.Duration(r.ttl)*time.Second)
 				if err != nil {
 					r.OccurErr(err)
 				}
@@ -180,7 +180,7 @@ func (r *redisLock) UnLock(entry *LockEntry) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	err := r.Del(ctx, entry.key).Err()
+	_, err := r.Del(ctx, entry.key)
 	if err != nil {
 		r.OccurErr(err)
 	}
@@ -216,7 +216,7 @@ func (c *combinationLock) UnLock(entry *LockEntry) error {
 	if c.rdb.IsOk() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
-		i, err := c.rdb.Del(ctx, entry.key).Uint64()
+		i, err := c.rdb.Del(ctx, entry.key)
 		if i != 0 {
 			return nil
 		}

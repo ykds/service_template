@@ -1,9 +1,9 @@
 package lock
 
 import (
-	"accelerator_api/pkg/cache"
 	"fmt"
 	"math/rand"
+	"service_template/pkg/cache"
 	"sync"
 	"testing"
 	"time"
@@ -20,7 +20,7 @@ func BenchmarkRedisLock(b *testing.B) {
 	defer rdb.Close()
 
 	wg := sync.WaitGroup{}
-	rl := NewRedisLock(rdb, 60)
+	rl := NewRedisLock(rdb.(*cache.Redis), 60)
 	for i := 0; i < b.N; i++ {
 		key := fmt.Sprintf("%d", rand.Intn(50))
 		ok, entry, err := rl.TryLock(key)
@@ -93,7 +93,7 @@ func TestRedisLock(t *testing.T) {
 		panic(err)
 	}
 	defer rdb.Close()
-	lock := NewRedisLock(rdb, 10)
+	lock := NewRedisLock(rdb.(*cache.Redis), 10)
 	ok, entry, err := lock.TryLock("test")
 	if !ok {
 		t.Fatalf("申请锁失败, error: %v", err)

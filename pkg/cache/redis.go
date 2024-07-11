@@ -3,23 +3,13 @@ package cache
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func IsNotFound(err error) bool {
-	return strings.Contains(err.Error(), "redis: nil")
-}
-
-type Option struct {
-	Host     string `json:"host" yaml:"host"`
-	Port     int    `json:"port" yaml:"port"`
-	Password string `json:"password" yaml:"password"`
-	DB       int    `json:"db" yaml:"db"`
-}
+var _ Cache = (*Redis)(nil)
 
 type Redis struct {
 	*redis.Client
@@ -28,7 +18,7 @@ type Redis struct {
 	checkCh chan struct{}
 }
 
-func NewRedis(opt Option) (*Redis, error) {
+func NewRedis(opt Option) (Cache, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", opt.Host, opt.Port),
 		Password: opt.Password,
@@ -79,4 +69,40 @@ func (r *Redis) OccurErr(err error) {
 
 func (r *Redis) Error() error {
 	return r.err
+}
+
+func (r *Redis) Get(ctx context.Context, key string) (string, error) {
+	return r.Client.Get(ctx, key).Result()
+}
+
+func (r *Redis) Del(ctx context.Context, key ...string) (int64, error) {
+	return r.Client.Del(ctx, key...).Result()
+}
+
+func (r *Redis) SetEx(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	return r.Client.SetEx(ctx, key, value, expiration).Err()
+}
+
+func (r *Redis) Expire(ctx context.Context, key string, expiration time.Duration) (bool, error) {
+	return r.Client.Expire(ctx, key, expiration).Result()
+}
+
+func (r *Redis) MGet(ctx context.Context, keys ...string) ([]string, error) {
+	ret, err := r.Client.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, err
+	}
+	vals := make([]string, 0, len(ret))
+	for _, item := range ret {
+		v, ok := item.(string)
+		if ok {
+			vals = append(vals, v)
+		}
+	}
+	return vals, nil
+}
+
+func (r *Redis) Exists(ctx context.Context, key string) (bool, error) {
+	i, err := r.Client.Exists(ctx, []string{key}...).Result()
+	return i > 0, err
 }

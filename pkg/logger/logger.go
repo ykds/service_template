@@ -1,12 +1,13 @@
 package logger
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var logger *Logger
@@ -63,7 +64,7 @@ type Option struct {
 
 type LumberjackOption struct {
 	Filename   string `json:"filename" yaml:"filename"`
-	MaxSize    int    `json:"max_size" yaml:"max_max"`
+	MaxSize    int    `json:"max_size" yaml:"max_size"`
 	MaxAge     int    `json:"max_age" yaml:"max_age"`
 	Compress   bool   `json:"compress" yaml:"compress"`
 	MaxBackups int    `json:"max_backups" yaml:"max_backups"`
@@ -105,6 +106,10 @@ func InitLogger(opt Option) *Logger {
 
 func (l *Logger) GetOutput() io.Writer {
 	return l.output
+}
+
+func (l *Logger) Printf(format string, args ...interface{}) {
+	l.SugaredLogger.Infof(format, args...)
 }
 
 func defaultLumberjackOption() LumberjackOption {

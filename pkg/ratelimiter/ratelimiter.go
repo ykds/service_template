@@ -1,9 +1,10 @@
 package ratelimiter
 
 import (
-	"accelerator_api/pkg/cache"
 	"context"
+	"service_template/pkg/cache"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -40,7 +41,7 @@ return res
 		r.rdb.OccurErr(err)
 		return false, err
 	}
-	return count < r.max, nil
+	return count <= r.max, nil
 }
 
 func NewLocalRateLimiter(max int64, interval int) RateLimiter {
@@ -53,7 +54,7 @@ func NewLocalRateLimiter(max int64, interval int) RateLimiter {
 }
 
 type Entry struct {
-	count     int64
+	count     atomic.Int64
 	ExpiredAt time.Time
 }
 
@@ -67,15 +68,17 @@ type localRateLimiter struct {
 func (l *localRateLimiter) CanPass(key string) (bool, error) {
 	l.m.Lock()
 	if e, ok := l.entries[key]; ok {
+		l.m.Unlock()
 		if e.ExpiredAt.Before(time.Now()) {
-			e.count = 0
+			e.count.Store(0)
 			e.ExpiredAt = time.Now().Add(time.Second * time.Duration(l.interval))
 		}
-		e.count += 1
-		l.m.Unlock()
-		return e.count < l.max, nil
+		e.count.Add(1)
+		return e.count.Load() <= l.max, nil
 	}
-	l.entries[key] = &Entry{ExpiredAt: time.Now().Add(time.Second * time.Duration(l.interval))}
+	e := &Entry{ExpiredAt: time.Now().Add(time.Second * time.Duration(l.interval))}
+	e.count.Store(1)
+	l.entries[key] = e
 	l.m.Unlock()
 	return true, nil
 }
